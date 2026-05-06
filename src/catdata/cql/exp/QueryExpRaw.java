@@ -507,7 +507,8 @@ public class QueryExpRaw extends QueryExp implements Raw {
 				toString2 += Util.sep(temp, "\n\t\t\t\t\t");
 			}
 
-			if (!atts.isEmpty()) {
+			if (!atts.isEmpty() || star) {
+				
 				toString2 += "\n\t\t\t\tattributes\t";
 				if (star) {
 					toString2 += " * ";

@@ -142,6 +142,7 @@ public class CombinatorParser implements IAqlParser {
 		return ret;
 	}
 
+	
 	private static Parser<RawTerm> term() {
 
 		Reference<RawTerm> ref = Parser.newReference();
@@ -514,7 +515,7 @@ public class CombinatorParser implements IAqlParser {
 						.map(x -> new InstExpCoEval(x.b, x.c, x.d == null ? Collections.emptyList() : x.d));
 
 		Parser ret = Parsers.or(queryQuotientExpRaw(), sigma_chase, l2, pi, frozen, instExpRand(), instExpCoEq(),
-				instExpRdfAll(), instExpXmlAll(), /* instExpMd(), */ instExpJsonAll(), chase, instExpJdbc(), empty,
+				instExpRdfAll(), instExpXmlAll(), /* instExpMd(), */  instExpJsonAll(), chase, instExpJdbc(), empty,
 				instExpRaw(), var, sigma, include, spanify, delta, core, ms_sql3, distinct, eval, colimInstExp(), dom, cd, anon,
 				except, pivot, cod, skolem, instExpCsv(), coeval, /* excel, */ instExpJdbcDirect(), instExpTinkerpop(),
 				parens(inst_ref));
@@ -1542,12 +1543,15 @@ public class CombinatorParser implements IAqlParser {
 
 				chase = Parsers.tuple(token("chase"), eds_ref.lazy(), query_ref.lazy())
 						.map(x -> new QueryExpChase(x.c, x.b)),
+						
+						star = Parsers.tuple(token("select_star"), query_ref.lazy())
+						.map(x -> new QueryExpSelectStar(x.b)),
 
 				refl = Parsers.tuple(token("reformulate"), eds_ref.lazy(), query_ref.lazy(), sch_ref.lazy(), ident)
 						.map(x -> new QueryExpReformulate(x.c, x.b, x.d, x.e)),
 
 				ret = Parsers.or(id, fi, id2, rext, sm, fromCoSpan, spanify, front, back, fromConstraints,
-						queryExpRaw(), queryExpRawSimple(), var, deltaQueryEval, delta, deltaQueryCoEval, comp, chase,
+						queryExpRaw(), queryExpRawSimple(), var, deltaQueryEval, delta, deltaQueryCoEval, comp, chase, star,
 						refl, parens(query_ref));
 
 		query_ref.set(ret);
@@ -1691,13 +1695,14 @@ public class CombinatorParser implements IAqlParser {
 	}
 
 	/*
-	 * private static Parser<InstExpMarkdown> instExpMd() { Parser<InstExpMarkdown>
-	 * ret = Parsers .tuple(token("import_md"), ident, options.between(token("{"),
-	 * token("}")).optional()) .map(x -> new InstExpMarkdown(x.b,
-	 * Util.newIfNull(x.c)));
-	 * 
-	 * return ret; }
-	 */
+	  private static Parser<InstExpMarkdown> instExpMd() { Parser<InstExpMarkdown>
+	  ret = Parsers .tuple(token("import_md"), ident, options.between(token("{"),
+	  token("}")).optional()) .map(x -> new InstExpMarkdown(x.b,
+	  Util.newIfNull(x.c)));
+	  
+	  return ret; }
+	  */
+	 
 
 	private static Parser<InstExpJsonAll> instExpJsonAll() {
 		Parser<InstExpJsonAll> ret = Parsers

@@ -200,7 +200,7 @@ public class QueryExpRawSimple extends QueryExp implements Raw {
 		List<String> temp = new LinkedList<>();
 
 		if (!block.isEmpty()) {
-			temp.add(block.get().toString2());
+			temp.add(block.get().toString2().trim());
 			sb.append("\t\t").append(Util.sep(temp, "\n\n\t\t")).append("\n");
 
 		}
