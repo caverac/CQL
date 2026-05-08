@@ -22,7 +22,8 @@ sourceSets {
     main {
         java {
             srcDirs = ['src']
-            exclude 'test/**'
+            exclude '**/*Test.java'
+            exclude '**/*TestHelpers.java'
             // OilExample.java has a text block exceeding JVM's 65535-byte constant pool limit.
             // It compiles under Eclipse's ecj but not javac. Exclude until the string is split.
             exclude '**/OilExample.java'
@@ -33,7 +34,9 @@ sourceSets {
     }
     test {
         java {
-            srcDirs = ['src/test/java']
+            srcDirs = ['src']
+            include '**/*Test.java'
+            include '**/*TestHelpers.java'
         }
     }
 }
@@ -101,7 +104,7 @@ spotless {
     ratchetFrom 'HEAD'
     java {
         target 'src/**/*.java'
-        targetExclude 'src/test/**', '**/easik/**', '**/com/**', '**/OilExample.java'
+        targetExclude '**/*Test.java', '**/*TestHelpers.java', '**/easik/**', '**/com/**', '**/OilExample.java'
         googleJavaFormat()
         removeUnusedImports()
         trimTrailingWhitespace()
