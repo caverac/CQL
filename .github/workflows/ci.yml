@@ -89,6 +89,26 @@ jobs:
           path: build/reports/checkstyle/
           retention-days: 14
 
+  javac:
+    name: javac (no Gradle)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Compile main sources with javac
+        run: |
+          mkdir -p out-javac
+          find src -name '*.java' \
+            ! -name '*Test.java' \
+            ! -name '*TestHelpers.java' \
+            ! -name 'OilExample.java' > sources.txt
+          javac -encoding UTF-8 -Xlint:none \
+            -d out-javac -cp "lib/*" @sources.txt
+
   spotbugs:
     name: SpotBugs
     runs-on: ubuntu-latest
