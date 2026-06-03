@@ -10,6 +10,10 @@ group = 'org.categoricaldata'
 version = '1.0.0'
 
 java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    // Keep producing Java 17 bytecode for runtime compatibility.
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
 }
@@ -108,7 +112,7 @@ spotless {
     java {
         target 'src/**/*.java'
         targetExclude '**/*Test.java', '**/*TestHelpers.java', '**/easik/**', '**/com/**', '**/OilExample.java'
-        googleJavaFormat('1.25.2')
+        googleJavaFormat('1.28.0')
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
