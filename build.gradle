@@ -100,16 +100,33 @@ jacocoTestCoverageVerification {
 
 // --- Spotless (formatting) ---
 spotless {
-    // Only check files that changed vs HEAD — won't flag existing unformatted code
-    ratchetFrom 'HEAD'
+    // Only check files that changed vs a baseline — won't flag the existing unformatted
+    // codebase. Locally, ratchet against HEAD (your uncommitted changes). In CI, a clean
+    // checkout has no diff vs HEAD, so ratchet against the base branch to check what the
+    // PR actually changed. GitHub Actions sets CI=true.
+    ratchetFrom(System.getenv('CI') ? 'origin/master' : 'HEAD')
     java {
         target 'src/**/*.java'
         targetExclude '**/*Test.java', '**/*TestHelpers.java', '**/easik/**', '**/com/**', '**/OilExample.java'
-        googleJavaFormat()
+        googleJavaFormat('1.25.2')
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
     }
+}
+
+// --- Documentation generation ---
+// Runs AqlHelp.main, which generates the CQL HTML manual into the help/ directory
+// (relative to the project root). The forked JVM calls System.exit(0) on success.
+tasks.register('generateHelp', JavaExec) {
+    group = 'documentation'
+    description = 'Generates the CQL HTML manual into the help/ directory.'
+    dependsOn 'classes'
+    mainClass = 'catdata.cql.exp.AqlHelp'
+    classpath = sourceSets.main.runtimeClasspath
+    // Examples may touch AWT; force headless so it runs on CI with no display.
+    systemProperty 'java.awt.headless', 'true'
+    jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED'
 }
 
 // Git pre-commit hook: runs spotlessCheck before each commit
