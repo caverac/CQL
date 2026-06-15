@@ -3,6 +3,7 @@ name: Deploy docs to website
 # Regenerate the CQL HTML manual and push it to the website repo's help/ directory.
 # Only help/ is touched, so the hand-authored pages on the site are never affected.
 
+
 on:
   push:
     branches: [master]
