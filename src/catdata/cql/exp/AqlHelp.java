@@ -303,6 +303,8 @@ public class AqlHelp {
       //		break;
       case check_warn_instead_of_fail:
         return "When true, check commans will emit warnings instead of stopping execution";
+      case use_egglog_for_chase:
+        return "When enabled, uses the egglog equality-saturation engine to compute the chase.";
       default:
         break;
     }
