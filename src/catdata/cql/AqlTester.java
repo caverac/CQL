@@ -1,18 +1,5 @@
 package catdata.cql;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import javax.swing.JOptionPane;
-import javax.swing.JTabbedPane;
-
 import catdata.Program;
 import catdata.Util;
 import catdata.cql.exp.AqlEnv;
@@ -24,55 +11,77 @@ import catdata.ide.Example;
 import catdata.ide.Examples;
 import catdata.ide.Language;
 import gnu.trove.map.hash.THashMap;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Map;
+import java.util.Set;
+import javax.swing.JOptionPane;
+import javax.swing.JTabbedPane;
 
 public class AqlTester {
 
-  static String message = "This self-test will run all the built-in CQL examples and check for exceptions.  This test cannot be interupted.  This window will disappear for a while. Continue?";
-
-  public static void doSelfTestGui() {
-    deleteFilesCreatedDuring(() -> {
-      int c = JOptionPane.showConfirmDialog(null, message, "Run Self-Test?", JOptionPane.YES_NO_OPTION);
-      if (c != JOptionPane.YES_OPTION) {
-        return null;
-      }
-      Map<String, Throwable> result = getTestResult();
-      if (result.isEmpty()) {
-        JOptionPane.showMessageDialog(null, "OK: Tests Passed");
-        return null;
-      }
-      JTabbedPane t = new JTabbedPane();
-      for (String k : result.keySet()) {
-        t.addTab(k, new CodeTextPanel("Error", result.get(k).getMessage()));
-      }
-      JOptionPane.showMessageDialog(null, t);
-      return null; // ignored
-    });
-  }
+  static String message =
+      "This self-test will run all the built-in CQL examples and check for exceptions.  This test cannot be interupted.  This window will disappear for a while. Continue?";
 
   /**
-   * Return a map of test name to error on that test, empty if all tests are successful.
+   * Built-in CQL examples the self-test does NOT run (they need external resources, are too slow,
+   * or are not standalone programs). The docs/examples generators share this set so that what is
+   * published can never drift from what the self-test actually verifies.
    */
-  public static Map<String, Throwable> doSelfTestSilent() {
-    return deleteFilesCreatedDuring(() -> {
-      // silence output
-      PrintStream out = System.out, err = System.err;
-      PrintStream nul = new PrintStream(new OutputStream() {
-        @Override
-        public void write(int arg0) throws IOException {
-        }
-      });
-      try {
-        System.setOut(nul);
-        System.setErr(nul);
+  public static final Set<String> NON_RUNNABLE =
+      Set.of("TutorialTSP", "QuickSQL", "Stdlib", "Imports");
 
-        // run tests
-        return getTestResult();
-      } finally {
-        // restore output
-        System.setOut(out);
-        System.setErr(nul);
-      }
-    });
+  public static void doSelfTestGui() {
+    deleteFilesCreatedDuring(
+        () -> {
+          int c =
+              JOptionPane.showConfirmDialog(
+                  null, message, "Run Self-Test?", JOptionPane.YES_NO_OPTION);
+          if (c != JOptionPane.YES_OPTION) {
+            return null;
+          }
+          Map<String, Throwable> result = getTestResult();
+          if (result.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "OK: Tests Passed");
+            return null;
+          }
+          JTabbedPane t = new JTabbedPane();
+          for (String k : result.keySet()) {
+            t.addTab(k, new CodeTextPanel("Error", result.get(k).getMessage()));
+          }
+          JOptionPane.showMessageDialog(null, t);
+          return null; // ignored
+        });
+  }
+
+  /** Return a map of test name to error on that test, empty if all tests are successful. */
+  public static Map<String, Throwable> doSelfTestSilent() {
+    return deleteFilesCreatedDuring(
+        () -> {
+          // silence output
+          PrintStream out = System.out, err = System.err;
+          PrintStream nul =
+              new PrintStream(
+                  new OutputStream() {
+                    @Override
+                    public void write(int arg0) throws IOException {}
+                  });
+          try {
+            System.setOut(nul);
+            System.setErr(nul);
+
+            // run tests
+            return getTestResult();
+          } finally {
+            // restore output
+            System.setOut(out);
+            System.setErr(nul);
+          }
+        });
   }
 
   public static <A> A deleteFilesCreatedDuring(java.util.function.Supplier<A> closure) {
@@ -109,8 +118,7 @@ public class AqlTester {
   private static Map<String, Throwable> getTestResult() {
     Map<String, String> progs = new THashMap<>();
     for (Example e : Examples.getExamples(Language.CQL)) {
-      if (e.getName().equals("TutorialTSP") || e.getName().equals("QuickSQL")
-          || e.getName().equals("Stdlib") || e.getName().equals("Imports")) {
+      if (NON_RUNNABLE.contains(e.getName())) {
         continue;
       }
       progs.put(e.getName(), e.getText());
@@ -135,5 +143,4 @@ public class AqlTester {
     }
     return result;
   }
-
 }
