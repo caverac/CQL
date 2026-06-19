@@ -23,9 +23,7 @@ import catdata.ide.Language;
 class CqlExamplesTest {
 
     /** Names to skip (require external resources or are too slow). */
-    private static final Set<String> SKIP = Set.of(
-        "TutorialTSP", "QuickSQL", "Stdlib", "Imports"
-    );
+    private static final Set<String> SKIP = AqlTester.NON_RUNNABLE;
 
     @Test
     @Tag("integration")

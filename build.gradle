@@ -133,6 +133,20 @@ tasks.register('generateHelp', JavaExec) {
     jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED'
 }
 
+// Runs AqlExamples.main, which generates the standalone examples site (one self-contained page
+// per self-tester example, showing its source and executed output) into the examples/ directory
+// (relative to the project root). The forked JVM calls System.exit(0) on success.
+tasks.register('generateExamples', JavaExec) {
+    group = 'documentation'
+    description = 'Generates the standalone CQL examples site into the examples/ directory.'
+    dependsOn 'classes'
+    mainClass = 'catdata.cql.exp.AqlExamples'
+    classpath = sourceSets.main.runtimeClasspath
+    // Examples may touch AWT; force headless so it runs on CI with no display.
+    systemProperty 'java.awt.headless', 'true'
+    jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED'
+}
+
 // Git pre-commit hook: runs spotlessCheck before each commit
 tasks.register('installGitHook', Copy) {
     from 'config/hooks/pre-commit'

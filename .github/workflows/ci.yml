@@ -146,7 +146,7 @@ jobs:
       - run: ./gradlew spotlessCheck
 
   docs:
-    name: Docs (AqlHelp)
+    name: Docs (AqlHelp + AqlExamples)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -173,4 +173,22 @@ jobs:
         with:
           name: cql-manual
           path: help/
+          retention-days: 14
+
+      - name: Generate CQL examples site
+        run: ./gradlew generateExamples
+
+      - name: Verify examples generated properly
+        run: |
+          set -euo pipefail
+          test -d examples || { echo "::error::examples/ was not produced"; exit 1; }
+          test -s examples/index.html || { echo "::error::missing or empty examples/index.html"; exit 1; }
+          test -s examples/Employees.html || { echo "::error::missing or empty examples/Employees.html"; exit 1; }
+
+      - name: Upload generated examples
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cql-examples
+          path: examples/
           retention-days: 14

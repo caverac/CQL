@@ -9,3 +9,6 @@ lib/com.microsoft.z3.jar
 .classpath
 .project
 help/
+# Anchored to the repo root so it ignores the generated examples/ site WITHOUT touching the
+# source examples under resources/open/examples/.
+/examples/
