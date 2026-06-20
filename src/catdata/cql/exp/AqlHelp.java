@@ -368,9 +368,37 @@ public class AqlHelp {
       Util.writeFile(search, new File(dir, "search.php").getAbsolutePath()); */
       Map<Example, Set<AqlSyntax>> index = new THashMap<>();
 
+      // Examples for which no per-example page is generated below. Other pages (e.g. option pages)
+      // must not link to these names, or those links would 404.
+      Set<String> undocumentedExamples = Set.of("Stdlib", "TutorialTSP");
+
+      // Syntax pages are generated further below only for non-var expressions enumerated by
+      // TypingInversion, and never for comments. Precompute the exact set of page basenames
+      // (kind + keyword) that WILL be written, so the per-example keyword cross-links can be
+      // suppressed when no target page exists. Mirrors the filters of the syntax-page loop; keep
+      // the two in sync. This is the single source of truth for "does a syntax page exist".
+      Map<Kind, Set<Pair<AqlTyping, Exp<?>>>> z =
+          new TypingInversion().covisit(Unit.unit, x -> new AqlTyping());
+      Set<String> generatedSyntaxPages = new THashSet<>();
+      for (Kind k : Kind.class.getEnumConstants()) {
+        if (k.equals(Kind.COMMENT)) {
+          continue;
+        }
+        for (Pair<AqlTyping, Exp<?>> pair : z.get(k)) {
+          if (pair.second.isVar()) {
+            continue;
+          }
+          generatedSyntaxPages.add(pair.second.kind().toString() + pair.second.getKeyword());
+        }
+      }
+      // Keywords whose cross-link we dropped because no syntax page exists for them (var
+      // expressions, or keywords absent from TypingInversion's enumeration). Reported after the
+      // example loop so the docs gap stays visible instead of being silently hidden.
+      Set<String> suppressedKeywordLinks = new THashSet<>();
+
       StringBuffer examples = new StringBuffer("<html><head>" + css + "</head><body>");
       for (Example ex : Util.alphabetical(Examples.getExamples(Language.CQL))) {
-        if (ex.getName().equals("Stdlib") || ex.getName().equals("TutorialTSP")) {
+        if (undocumentedExamples.contains(ex.getName())) {
           continue;
         }
         examples.append(
@@ -389,16 +417,23 @@ public class AqlHelp {
         index.put(ex, set);
         other.append("Keywords:<br/></br>");
         for (Exp<?> e : prog.exps.values()) {
+          // Comments have no syntax page (see the Kind.COMMENT skip in the syntax loop), and their
+          // "keyword" is free-form body text, so linking them would emit a broken href.
+          if (e.kind().equals(Kind.COMMENT)) {
+            continue;
+          }
           if (!set.contains(e.getSyntax())) {
             set.add(e.getSyntax());
-            other.append(
-                "\t\t\t<a href=\""
-                    + e.kind()
-                    + e.getKeyword()
-                    + ".html"
-                    + "\" >"
-                    + e.getKeyword()
-                    + "</a><br />\n");
+            String page = e.kind().toString() + e.getKeyword();
+            if (generatedSyntaxPages.contains(page)) {
+              other.append(
+                  "\t\t\t<a href=\"" + page + ".html" + "\" >" + e.getKeyword() + "</a><br />\n");
+            } else {
+              // No syntax page is generated for this keyword, so render it as plain text rather
+              // than emit a dead link.
+              other.append("\t\t\t" + e.getKeyword() + "<br />\n");
+              suppressedKeywordLinks.add(page);
+            }
           }
           for (String k : e.options().keySet()) {
             if (opSeen.contains(k)) {
@@ -467,6 +502,14 @@ public class AqlHelp {
       }
       examples.append("\n</body></html>");
 
+      if (!suppressedKeywordLinks.isEmpty()) {
+        System.out.println(
+            "AqlHelp: suppressed "
+                + suppressedKeywordLinks.size()
+                + " keyword cross-link(s) with no syntax page (no doc page exists for these): "
+                + Util.sep(Util.alphabetical(new ArrayList<>(suppressedKeywordLinks)), ", "));
+      }
+
       StringBuffer logo = new StringBuffer("");
       logo.append("<html><head>" + css + "</head><body>");
       logo.append("\n<a href=\"syntax.html\" target=\"tree\">Syntax</a><br >");
@@ -500,8 +543,6 @@ public class AqlHelp {
 
       StringBuffer syntax = new StringBuffer();
       syntax.append("<html><head>" + css + "</head>\n\t");
-      Map<Kind, Set<Pair<AqlTyping, Exp<?>>>> z =
-          new TypingInversion().covisit(Unit.unit, x -> new AqlTyping());
       Map<String, Set<Exp<?>>> opInv = Util.newSetsFor(AqlOptions.optionNames());
 
       boolean isFirstK = true;
@@ -634,7 +675,9 @@ public class AqlHelp {
         }
         StringBuffer yyy = new StringBuffer();
         for (Example example : Util.alphabetical(Examples.getExamples(Language.CQL))) {
-
+          if (undocumentedExamples.contains(example.getName())) {
+            continue;
+          }
           if (example.getText().contains(ex.toString())) {
             yyy.append(
                 "\n<a href=\""
